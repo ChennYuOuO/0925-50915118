@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>記憶大考驗</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- 開始遊戲按鈕 -->
+<div class="start-button-container">
+    <button id="startButton" class="control-button">開始遊戲</button>
+</div>
+
+<!-- 控制按鈕區域 -->
+<div class="control-buttons" style="display: none;">
+    <button id="switchGroupButton" class="control-button">切換圖片組別</button>
+    <button id="showFrontButton" class="control-button">全部翻到正面</button>
+    <button id="showBackButton" class="control-button">全部翻到背面</button>
+</div>
+
+<!-- 倒計時顯示 -->
+<p id="timer" style="text-align: center; font-size: 18px;"></p>
+
+<!-- 卡片區域 -->
+<div class="grid-container" id="gameBoard">
+    <!-- 卡片將在按下開始遊戲後生成 -->
+</div>
+
+<script>
+    // 定義兩組圖片資料
+    const group1 = [
+        { front: '1.png', back: '9.png' },
+        { front: '2.png', back: '9.png' },
+        { front: '3.png', back: '9.png' },
+        { front: '4.png', back: '9.png' },
+        { front: '5.png', back: '9.png' },
+        { front: '6.png', back: '9.png' },
+        { front: '7.png', back: '9.png' },
+        { front: '8.png', back: '9.png' },
+    ];
+
+    const group2 = [
+        { front: '10.png', back: '18.png' },
+        { front: '11.png', back: '18.png' },
+        { front: '12.png', back: '18.png' },
+        { front: '13.png', back: '18.png' },
+        { front: '14.png', back: '18.png' },
+        { front: '15.png', back: '18.png' },
+        { front: '16.png', back: '18.png' },
+        { front: '17.png', back: '18.png' },
+    ];
+
+    let currentGroup = group1; // 當前使用的圖片組別
+    let countdown; // 計時器變量
+
+    // 隨機打亂數組的函數
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    // 生成卡片的函數
+    function createCards(cardData) {
+        const gameBoard = document.getElementById('gameBoard');
+        gameBoard.innerHTML = ''; // 清空之前的卡片
+
+        // 每種圖片各兩張
+        const selectedCards = cardData.slice(0, 8); // 取前8張圖片
+        const pairedCards = [...selectedCards, ...selectedCards]; // 每種圖片複製一份
+        const shuffledCards = shuffle(pairedCards); // 將卡片順序打亂
+
+        // 生成卡片並顯示在頁面上
+        shuffledCards.forEach(card => {
+            const cardContainer = document.createElement('div');
+            cardContainer.classList.add('card-container');
+
+            const cardElement = document.createElement('div');
+            cardElement.classList.add('card');
+
+            const cardFront = document.createElement('div');
+            cardFront.classList.add('card-front');
+            const frontImg = document.createElement('img');
+            frontImg.src = card.front;
+            cardFront.appendChild(frontImg);
+
+            const cardBack = document.createElement('div');
+            cardBack.classList.add('card-back');
+            const backImg = document.createElement('img');
+            backImg.src = card.back;
+            cardBack.appendChild(backImg);
+
+            cardElement.appendChild(cardFront);
+            cardElement.appendChild(cardBack);
+            cardContainer.appendChild(cardElement);
+            gameBoard.appendChild(cardContainer);
+
+            // 點擊卡片翻轉效果
+            cardElement.addEventListener('click', () => {
+                cardElement.classList.toggle('flip');
+            });
+        });
+
+        // 顯示按鈕
+        document.querySelector('.control-buttons').style.display = 'flex';
+
+        // 開始倒計時
+        startCountdown();
+    }
+
+    // 倒計時函數
+    function startCountdown() {
+        clearInterval(countdown); // 清除之前的計時器
+        let timer = 10;
+        const timerDisplay = document.getElementById('timer');
+        timerDisplay.textContent = `倒計時：${timer} 秒`;
+
+        countdown = setInterval(() => {
+            timer--;
+            timerDisplay.textContent = `倒計時：${timer} 秒`;
+
+            // 時間到後翻轉所有卡片
+            if (timer === 0) {
+                clearInterval(countdown);
+                flipAllCards();
+                timerDisplay.textContent = ''; // 隱藏倒計時
+            }
+        }, 1000);
+    }
+
+    // 翻轉所有卡片的函數
+    function flipAllCards() {
+        const allCards = document.querySelectorAll('.card');
+        allCards.forEach(card => {
+            if (!card.classList.contains('flip')) {
+                card.classList.add('flip');
+            }
+        });
+    }
+
+    // 翻轉所有卡片到正面
+    function showAllFront() {
+        const allCards = document.querySelectorAll('.card');
+        allCards.forEach(card => {
+            if (card.classList.contains('flip')) {
+                card.classList.remove('flip');
+            }
+        });
+    }
+
+    // 翻轉所有卡片到背面
+    function showAllBack() {
+        const allCards = document.querySelectorAll('.card');
+        allCards.forEach(card => {
+            if (!card.classList.contains('flip')) {
+                card.classList.add('flip');
+            }
+        });
+    }
+
+    // 切換圖片組別
+    function switchGroup() {
+        currentGroup = currentGroup === group1 ? group2 : group1;
+        createCards(currentGroup); // 重新生成卡片
+    }
+
+    // 綁定按鈕事件
+    document.getElementById('startButton').addEventListener('click', () => {
+        createCards(currentGroup); // 根據當前選擇的組別生成卡片
+    });
+
+    document.getElementById('showFrontButton').addEventListener('click', showAllFront);
+    document.getElementById('showBackButton').addEventListener('click', showAllBack);
+    document.getElementById('switchGroupButton').addEventListener('click', switchGroup);
+</script>
+
+</body>
+</html>
